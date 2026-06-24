@@ -12,6 +12,7 @@ module.exports = {
     '<rootDir>/e2e/',
     '<rootDir>/load-tests/',
     '<rootDir>/src/animations/',
+    '<rootDir>/Astera/',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

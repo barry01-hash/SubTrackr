@@ -27,6 +27,21 @@ export interface SubscriptionSupportEvent {
   occurredAt: Date;
 }
 
+export interface SubscriptionSupportContext {
+  subscriptionName: string;
+  planName: string;
+  planTier: string;
+  billingCycle: string;
+  status: string;
+  amount: number;
+  currency: string;
+  createdAt: string;
+  nextBillingDate: string;
+  failedPayments: number;
+  chargeCount: number;
+  history: string[];
+}
+
 export interface TicketingIntegrationConfig {
   provider: 'zendesk' | 'freshdesk' | 'intercom' | 'internal';
   enabled: boolean;

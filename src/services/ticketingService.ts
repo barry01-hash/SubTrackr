@@ -1,9 +1,11 @@
 import {
   SubscriptionSupportEvent,
+  SubscriptionSupportContext,
   SupportTicket,
   TicketingIntegrationConfig,
   TicketPriority,
   TicketStatus,
+  TicketIssueType,
 } from '../types/support';
 
 const createId = (): string =>
@@ -14,6 +16,23 @@ const priorityByIssue: Record<SubscriptionSupportEvent['issueType'], TicketPrior
   cancellation: 'medium',
   dispute: 'urgent',
   general: 'low',
+};
+
+export const buildSupportEventMessage = (
+  context: SubscriptionSupportContext,
+  issueType: TicketIssueType
+): string => {
+  const headline = `${context.subscriptionName} (${context.planName})`;
+  switch (issueType) {
+    case 'failed_charge':
+      return `${headline} had a failed charge of ${context.amount.toFixed(2)} ${context.currency}. Next billing date: ${context.nextBillingDate}.`;
+    case 'cancellation':
+      return `${headline} was cancelled from ${context.status}.`;
+    case 'dispute':
+      return `${headline} has an active dispute and needs review.`;
+    default:
+      return `${headline} needs support attention.`;
+  }
 };
 
 export const createTicketFromEvent = (

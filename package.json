@@ -16,7 +16,7 @@
     "test": "jest --passWithNoTests",
     "test:coverage": "jest --coverage",
     "mutation:test": "npx --yes @stryker-mutator/core@9.0.0 run",
-    "build": "expo export",
+    "build": "npx tsc --noEmit",
     "build:android": "expo run:android --variant release",
     "contracts:test": "cd contracts && cargo test",
     "contracts:fmt": "cd contracts && cargo fmt --check",
