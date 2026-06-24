@@ -15,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import SubscriptionDetailScreen from '../screens/SubscriptionDetailScreen';
 import InvoiceListScreen from '../screens/InvoiceListScreen';
 import InvoiceDetailScreen from '../screens/InvoiceDetailScreen';
+import InvoiceBrandingScreen from '../screens/InvoiceBrandingScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SlaDashboard from '../screens/SlaDashboard';
 import GDPRSettingsScreen from '../screens/GDPRSettingsScreen';
@@ -120,6 +121,11 @@ const HomeStack = () => (
       name="InvoiceDetail"
       component={InvoiceDetailScreen}
       options={{ title: 'Invoice Detail', headerShown: true }}
+    />
+    <Stack.Screen
+      name="InvoiceBranding"
+      component={InvoiceBrandingScreen}
+      options={{ title: 'Invoice Branding', headerShown: true }}
     />
     <Stack.Screen
       name="GroupManagement"

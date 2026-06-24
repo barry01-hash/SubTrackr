@@ -143,6 +143,16 @@ const SettingsScreen: React.FC = () => {
               {'>'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => navigation.navigate('InvoiceBranding')}
+            accessibilityRole="button"
+            accessibilityLabel="Invoice branding">
+            <Text style={styles.linkText}>Invoice Branding</Text>
+            <Text style={styles.linkArrow} accessibilityElementsHidden={true}>
+              â†’
+            </Text>
+          </TouchableOpacity>
         </Card>
         <Card style={styles.section}>
           <Text style={styles.sectionTitle} accessibilityRole="header">

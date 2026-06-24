@@ -66,6 +66,33 @@ pub struct InvoiceLineItem {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
+pub struct InvoiceBrandingField {
+    pub label: String,
+    pub value: String,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct InvoiceBranding {
+    pub logo_uri: String,
+    pub primary_color: String,
+    pub accent_color: String,
+    pub footer_note: String,
+    pub payment_terms: String,
+    pub late_fee_policy: String,
+    pub legal_text: String,
+    pub po_number: String,
+    pub vat_id: String,
+    pub cost_center: String,
+    pub department: String,
+    pub locale: String,
+    pub currency_position: String,
+    pub date_format: String,
+    pub custom_fields: Vec<InvoiceBrandingField>,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Invoice {
     pub id: u64,
     pub invoice_number: String,
@@ -81,6 +108,7 @@ pub struct Invoice {
     pub status: InvoiceStatus,
     pub currency: String,
     pub region: String,
+    pub branding: InvoiceBranding,
 }
 
 #[contracttype]
@@ -92,6 +120,7 @@ pub struct InvoiceConfig {
     pub default_tax_bps: u32,
     pub exchange_rate_scale: i128,
     pub payment_terms_secs: Timestamp,
+    pub branding: InvoiceBranding,
 }
 
 /// A subscription plan created by a merchant.

@@ -1,4 +1,5 @@
 import { BillingCycle, Subscription } from './subscription';
+import type { InvoiceBrandingConfig } from '../utils/invoiceBranding';
 
 export enum InvoiceStatus {
   DRAFT = 'draft',
@@ -43,6 +44,7 @@ export interface Invoice {
   updatedAt: Date;
   recipientEmail?: string;
   notes?: string;
+  branding?: InvoiceBrandingConfig;
 }
 
 export interface InvoiceConfig {
@@ -53,6 +55,7 @@ export interface InvoiceConfig {
   defaultTaxRateBps: number;
   exchangeRateScale: number;
   paymentTermsDays: number;
+  branding?: InvoiceBrandingConfig;
 }
 
 export interface InvoiceTotals {
@@ -82,6 +85,7 @@ export const DEFAULT_INVOICE_CONFIG: InvoiceConfig = {
   defaultTaxRateBps: 0,
   exchangeRateScale: 1_000_000,
   paymentTermsDays: 14,
+  branding: undefined,
 };
 
 export const isOpenInvoice = (status: InvoiceStatus): boolean =>

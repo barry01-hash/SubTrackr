@@ -8,6 +8,14 @@ import {
   formatInvoiceNumber,
 } from '../invoice';
 import { DEFAULT_INVOICE_CONFIG, InvoiceStatus } from '../../types/invoice';
+import {
+  DEFAULT_INVOICE_BRANDING,
+  formatInvoiceCurrency,
+  formatInvoiceDate,
+  getInvoicePreviewLines,
+  normalizeInvoiceBranding,
+  truncateInvoiceField,
+} from '../invoiceBranding';
 
 describe('invoice utilities', () => {
   it('formats invoice numbers with configurable padding', () => {
@@ -68,5 +76,21 @@ describe('invoice utilities', () => {
   it('keeps invoice status values aligned with the contract model', () => {
     expect(InvoiceStatus.DRAFT).toBe('draft');
     expect(InvoiceStatus.PAID).toBe('paid');
+  });
+
+  it('normalizes branding inputs and formats locale-aware values', () => {
+    const branding = normalizeInvoiceBranding({
+      ...DEFAULT_INVOICE_BRANDING,
+      currencyPosition: 'suffix',
+      dateFormat: 'YYYY-MM-DD',
+      customFields: [{ label: 'Department', value: 'Operations' }],
+      legalText: 'This is a long legal note that should survive normalization.',
+    });
+
+    expect(formatInvoiceDate(new Date('2026-06-24T00:00:00Z'), branding)).toBe('2026-06-24');
+    expect(formatInvoiceCurrency(1234.5, 'USD', branding)).toContain('$');
+    expect(truncateInvoiceField('x'.repeat(100), 20)).toBe('x'.repeat(17) + '...');
+    expect(getInvoicePreviewLines(branding)).toContain('Custom fields:');
+    expect(getInvoicePreviewLines(branding)).toContain('Department: Operations');
   });
 });

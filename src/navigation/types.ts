@@ -13,6 +13,7 @@ export type RootStackParamList = {
   SlaDashboard: undefined;
   InvoiceList: undefined;
   InvoiceDetail: { id: string };
+  InvoiceBranding: undefined;
   GDPRSettings: undefined;
   Settings: undefined;
   CalendarIntegration: undefined;
