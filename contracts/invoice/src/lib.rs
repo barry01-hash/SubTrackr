@@ -8,8 +8,8 @@ use alloc::format;
 use alloc::string::ToString;
 use soroban_sdk::{Address, Bytes, Env, IntoVal, String, TryFromVal, Val, Vec};
 use subtrackr_types::{
-    Invoice, InvoiceConfig, InvoiceLineItem, InvoiceStatus, Plan, StorageKey, Subscription,
-    TimeRange,
+    Invoice, InvoiceBranding, InvoiceConfig, InvoiceLineItem, InvoiceStatus, Plan, StorageKey,
+    Subscription, TimeRange,
 };
 
 const DEFAULT_RATE_SCALE: i128 = 1_000_000;
@@ -37,6 +37,29 @@ fn get_admin(env: &Env) -> Address {
     storage_instance_get(env, StorageKey::Admin).expect("Admin not set")
 }
 
+fn default_branding(env: &Env) -> InvoiceBranding {
+    InvoiceBranding {
+        logo_uri: String::from_str(env, ""),
+        primary_color: String::from_str(env, "#0F172A"),
+        accent_color: String::from_str(env, "#2563EB"),
+        footer_note: String::from_str(env, "Thank you for your business."),
+        payment_terms: String::from_str(env, "Net 14"),
+        late_fee_policy: String::from_str(env, "Late fees may apply after the due date."),
+        legal_text: String::from_str(
+            env,
+            "All services are billed according to the agreed subscription terms.",
+        ),
+        po_number: String::from_str(env, ""),
+        vat_id: String::from_str(env, ""),
+        cost_center: String::from_str(env, ""),
+        department: String::from_str(env, ""),
+        locale: String::from_str(env, "en-US"),
+        currency_position: String::from_str(env, "prefix"),
+        date_format: String::from_str(env, "MM/DD/YYYY"),
+        custom_fields: Vec::new(env),
+    }
+}
+
 fn invoice_config(env: &Env) -> InvoiceConfig {
     storage_instance_get(env, StorageKey::InvoiceConfig).unwrap_or(InvoiceConfig {
         numbering_prefix: String::from_str(env, DEFAULT_PREFIX),
@@ -45,6 +68,7 @@ fn invoice_config(env: &Env) -> InvoiceConfig {
         default_tax_bps: 0,
         exchange_rate_scale: DEFAULT_RATE_SCALE,
         payment_terms_secs: DEFAULT_PAYMENT_TERMS_SECS,
+        branding: default_branding(env),
     })
 }
 
@@ -182,6 +206,7 @@ impl SubTrackrInvoice {
                 default_tax_bps: 0,
                 exchange_rate_scale: DEFAULT_RATE_SCALE,
                 payment_terms_secs: DEFAULT_PAYMENT_TERMS_SECS,
+                branding: default_branding(&env),
             },
         );
     }
@@ -249,6 +274,7 @@ impl SubTrackrInvoice {
             status: InvoiceStatus::Draft,
             currency: effective_currency,
             region: effective_region,
+            branding: config.branding.clone(),
         };
         store_invoice(&env, &invoice);
         invoice

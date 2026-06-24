@@ -18,6 +18,11 @@ import { RootStackParamList } from '../navigation/types';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { generateInvoicePdfPreview } from '../utils/invoice';
+import {
+  formatInvoiceCurrency,
+  formatInvoiceDate,
+  normalizeInvoiceBranding,
+} from '../utils/invoiceBranding';
 
 type RoutePropType = RouteProp<RootStackParamList, 'InvoiceDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -33,6 +38,7 @@ const InvoiceDetailScreen: React.FC = () => {
   const markInvoicePaid = useInvoiceStore((state) => state.markInvoicePaid);
 
   const preview = useMemo(() => (invoice ? generateInvoicePdfPreview(invoice) : ''), [invoice]);
+  const branding = useMemo(() => normalizeInvoiceBranding(invoice?.branding), [invoice?.branding]);
 
   if (!invoice) {
     return (
@@ -151,6 +157,20 @@ const InvoiceDetailScreen: React.FC = () => {
               <Text style={styles.secondaryButtonText}>Preview PDF</Text>
             </TouchableOpacity>
           </View>
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => navigation.navigate('InvoiceBranding')}>
+              <Text style={styles.secondaryButtonText}>Branding</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() =>
+                Alert.alert('Branding preview', generateInvoicePdfPreview({ ...invoice, branding }))
+              }>
+              <Text style={styles.secondaryButtonText}>Preview with branding</Text>
+            </TouchableOpacity>
+          </View>
         </Card>
 
         <Card style={styles.sectionCard}>
@@ -159,6 +179,22 @@ const InvoiceDetailScreen: React.FC = () => {
           <Text style={styles.metaText}>Period start: {formatDate(invoice.period.start)}</Text>
           <Text style={styles.metaText}>Period end: {formatDate(invoice.period.end)}</Text>
           <Text style={styles.metaText}>Created: {formatDate(invoice.createdAt)}</Text>
+        </Card>
+
+        <Card style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Branding</Text>
+          <Text style={styles.metaText}>Primary color: {branding.primaryColor}</Text>
+          <Text style={styles.metaText}>Accent color: {branding.accentColor}</Text>
+          <Text style={styles.metaText}>Locale: {branding.locale}</Text>
+          <Text style={styles.metaText}>Currency placement: {branding.currencyPosition}</Text>
+          <Text style={styles.metaText}>PO number: {branding.poNumber || 'Not set'}</Text>
+          <Text style={styles.metaText}>VAT ID: {branding.vatId || 'Not set'}</Text>
+          <Text style={styles.metaText}>
+            Example total: {formatInvoiceCurrency(invoice.total, invoice.currency, branding)}
+          </Text>
+          <Text style={styles.metaText}>
+            Example due date: {formatInvoiceDate(invoice.dueDate, branding)}
+          </Text>
         </Card>
       </ScrollView>
     </SafeAreaView>

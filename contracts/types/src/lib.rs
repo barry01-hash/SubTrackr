@@ -66,6 +66,33 @@ pub struct InvoiceLineItem {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
+pub struct InvoiceBrandingField {
+    pub label: String,
+    pub value: String,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct InvoiceBranding {
+    pub logo_uri: String,
+    pub primary_color: String,
+    pub accent_color: String,
+    pub footer_note: String,
+    pub payment_terms: String,
+    pub late_fee_policy: String,
+    pub legal_text: String,
+    pub po_number: String,
+    pub vat_id: String,
+    pub cost_center: String,
+    pub department: String,
+    pub locale: String,
+    pub currency_position: String,
+    pub date_format: String,
+    pub custom_fields: Vec<InvoiceBrandingField>,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Invoice {
     pub id: u64,
     pub invoice_number: String,
@@ -81,6 +108,7 @@ pub struct Invoice {
     pub status: InvoiceStatus,
     pub currency: String,
     pub region: String,
+    pub branding: InvoiceBranding,
 }
 
 #[contracttype]
@@ -92,6 +120,7 @@ pub struct InvoiceConfig {
     pub default_tax_bps: u32,
     pub exchange_rate_scale: i128,
     pub payment_terms_secs: Timestamp,
+    pub branding: InvoiceBranding,
 }
 
 /// A subscription plan created by a merchant.
@@ -126,6 +155,79 @@ pub struct Subscription {
     pub paused_at: u64,
     pub pause_duration: u64,
     pub refund_requested_amount: i128,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub enum CreditPaymentMethod {
+    Card,
+    BankTransfer,
+    Wallet,
+    Manual,
+    Crypto,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub enum CreditLedgerEntryKind {
+    Purchase,
+    Application,
+    Expiration,
+    TransferIn,
+    TransferOut,
+    Adjustment,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct CreditPolicy {
+    pub expiration_days: u32,
+    pub transferable: bool,
+    pub auto_apply: bool,
+    pub allow_partial: bool,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct CreditLot {
+    pub id: u64,
+    pub account: Address,
+    pub amount_remaining: i128,
+    pub original_amount: i128,
+    pub created_at: Timestamp,
+    pub expires_at: Timestamp,
+    pub payment_method: CreditPaymentMethod,
+    pub reference: String,
+    pub note: String,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct CreditLedgerEntry {
+    pub id: u64,
+    pub account: Address,
+    pub kind: CreditLedgerEntryKind,
+    pub amount: i128,
+    pub balance_after: i128,
+    pub running_total: i128,
+    pub created_at: Timestamp,
+    pub expires_at: Timestamp,
+    pub subscription_id: u64,
+    pub invoice_id: String,
+    pub related_account: Address,
+    pub payment_method: CreditPaymentMethod,
+    pub reference: String,
+    pub note: String,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct CreditApplicationReceipt {
+    pub invoice_id: String,
+    pub subscription_id: u64,
+    pub applied_amount: i128,
+    pub remaining_due: i128,
+    pub status: InvoiceStatus,
 }
 
 pub type Timestamp = u64;
@@ -229,6 +331,7 @@ pub enum RiskSignalKind {
     Chargeback,
     PatternShift,
     DeviceMismatch,
+    GeolocationAnomaly,
 }
 
 #[contracttype]
@@ -242,6 +345,16 @@ pub struct RiskSignal {
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
+pub struct FraudEvidence {
+    pub label: String,
+    pub value: String,
+    pub source: String,
+    pub captured_at: Timestamp,
+    pub confidence: u32,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RiskScore {
     pub subscriber: Address,
     pub subscription_id: SubscriptionId,
@@ -250,10 +363,14 @@ pub struct RiskScore {
     pub velocity_score: u32,
     pub anomaly_score: u32,
     pub chargeback_score: u32,
+    pub device_mismatch_score: u32,
+    pub geolocation_score: u32,
+    pub pattern_shift_score: u32,
     pub action: FraudAction,
     pub reason: String,
     pub assessed_at: Timestamp,
     pub signals: Vec<RiskSignal>,
+    pub evidence: Vec<FraudEvidence>,
 }
 
 #[contracttype]
@@ -269,6 +386,8 @@ pub struct FraudCase {
     pub reason: String,
     pub created_at: Timestamp,
     pub updated_at: Timestamp,
+    pub evidence: Vec<FraudEvidence>,
+    pub reviewed_at: Timestamp,
 }
 
 #[contracttype]
@@ -282,8 +401,11 @@ pub struct FraudReport {
     pub average_risk: u32,
     pub velocity_alerts: u32,
     pub anomaly_alerts: u32,
+    pub geolocation_alerts: u32,
     pub chargeback_predictions: u32,
     pub high_risk_subscribers: u32,
+    pub pending_evidence_count: u32,
+    pub false_positive_feedback_count: u32,
     pub recent_cases: Vec<FraudCase>,
 }
 
@@ -360,4 +482,10 @@ pub enum StorageKey {
     PlanQuotas(u64),
     /// Usage record for a subscription and metric (sub_id, metric -> UsageRecord)
     SubscriptionUsage(u64, QuotaMetric),
+
+    // â”€â”€ Credit balance state â”€â”€
+    CreditBalance(Address),
+    CreditPolicy(Address),
+    CreditLots(Address),
+    CreditLedger(Address),
 }

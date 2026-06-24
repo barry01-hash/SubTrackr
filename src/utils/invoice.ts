@@ -8,7 +8,13 @@ import {
   InvoiceStatus,
   InvoiceTotals,
 } from '../types/invoice';
-import { formatCurrency, formatDate } from './formatting';
+import { formatCurrency } from './formatting';
+import {
+  getInvoicePreviewLines,
+  normalizeInvoiceBranding,
+  formatInvoiceCurrency,
+  formatInvoiceDate,
+} from './invoiceBranding';
 
 const SECOND = 1000;
 const DAY = 24 * 60 * 60 * SECOND;
@@ -110,6 +116,7 @@ export const buildInvoice = (
   const totals = calculateInvoiceTotals([lineItem], taxRateBps);
   const createdAt = new Date();
   const dueDate = new Date(period.end.getTime() + config.paymentTermsDays * DAY);
+  const branding = normalizeInvoiceBranding(config.branding);
 
   return {
     id: `${subscription.id}-${sequence}`,
@@ -131,25 +138,42 @@ export const buildInvoice = (
     updatedAt: createdAt,
     recipientEmail,
     notes,
+    branding,
   };
 };
 
 export const generateInvoicePdfPreview = (invoice: Invoice): string => {
+  const branding = normalizeInvoiceBranding(invoice.branding);
   const lines = [
     'SubTrackr Invoice',
+    `Primary color: ${branding.primaryColor}`,
+    `Accent color: ${branding.accentColor}`,
+    `Locale: ${branding.locale}`,
+    branding.logoUri ? `Logo: ${branding.logoUri}` : 'Logo: not set',
     `Invoice: ${invoice.invoiceNumber}`,
     `Status: ${invoice.status}`,
-    `Period: ${formatDate(invoice.period.start)} - ${formatDate(invoice.period.end)}`,
-    `Due: ${formatDate(invoice.dueDate)}`,
-    `Subtotal: ${formatCurrency(invoice.subtotal, invoice.currency)}`,
-    `Tax: ${formatCurrency(invoice.tax, invoice.currency)}`,
-    `Total: ${formatCurrency(invoice.total, invoice.currency)}`,
+    `Period: ${formatInvoiceDate(invoice.period.start, branding)} - ${formatInvoiceDate(invoice.period.end, branding)}`,
+    `Due: ${formatInvoiceDate(invoice.dueDate, branding)}`,
+    `Subtotal: ${formatInvoiceCurrency(invoice.subtotal, invoice.currency, branding)}`,
+    `Tax: ${formatInvoiceCurrency(invoice.tax, invoice.currency, branding)}`,
+    `Total: ${formatInvoiceCurrency(invoice.total, invoice.currency, branding)}`,
+    branding.poNumber ? `PO Number: ${branding.poNumber}` : '',
+    branding.vatId ? `VAT ID: ${branding.vatId}` : '',
+    branding.costCenter ? `Cost Center: ${branding.costCenter}` : '',
+    branding.department ? `Department: ${branding.department}` : '',
+    branding.paymentTerms ? `Payment Terms: ${branding.paymentTerms}` : '',
+    branding.lateFeePolicy ? `Late Fee Policy: ${branding.lateFeePolicy}` : '',
+    branding.footerNote ? `Footer: ${branding.footerNote}` : '',
     'Items:',
     ...invoice.lineItems.map(
       (item) =>
         `${item.description} x${item.quantity} @ ${formatCurrency(item.unitPrice, item.currency)}`
     ),
+    ...getInvoicePreviewLines(branding),
+    ...(branding.legalText.length > 240
+      ? ['--- Page 2 ---', branding.legalText]
+      : [branding.legalText]),
   ];
 
-  return lines.join('\n');
+  return lines.filter(Boolean).join('\n');
 };

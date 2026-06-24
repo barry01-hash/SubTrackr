@@ -10,6 +10,11 @@ import {
   InvoiceTotals,
 } from '../types/invoice';
 import { buildInvoice, calculateInvoiceTotals } from '../utils/invoice';
+import {
+  DEFAULT_INVOICE_BRANDING,
+  normalizeInvoiceBranding,
+  type InvoiceBrandingConfig,
+} from '../utils/invoiceBranding';
 import { CACHE_CONSTANTS } from '../utils/constants/values';
 import { errorHandler, AppError } from '../services/errorHandler';
 import { presentLocalNotification } from '../services/notificationService';
@@ -54,6 +59,7 @@ const normalizeInvoice = (raw: Partial<Invoice>): Invoice => {
     updatedAt: toValidDate(raw.updatedAt, createdAt),
     recipientEmail: raw.recipientEmail,
     notes: raw.notes,
+    branding: normalizeInvoiceBranding(raw.branding),
   };
 };
 
@@ -144,6 +150,7 @@ interface InvoiceState {
   nextSequence: number;
   isLoading: boolean;
   error: AppError | null;
+  branding: InvoiceBrandingConfig;
 
   generateInvoiceFromSubscription: (
     data: InvoiceFormData,
@@ -156,6 +163,8 @@ interface InvoiceState {
   markInvoicePaid: (id: string) => Promise<void>;
   setTaxRate: (region: string, taxRateBps: number) => void;
   setExchangeRate: (currency: string, exchangeRate: number) => void;
+  setBranding: (branding: Partial<InvoiceBrandingConfig>) => void;
+  resetBranding: () => void;
   calculateTotals: (id: string) => InvoiceTotals | null;
 }
 
@@ -172,6 +181,7 @@ export const useInvoiceStore = create<InvoiceState>()(
       nextSequence: 1,
       isLoading: false,
       error: null,
+      branding: DEFAULT_INVOICE_BRANDING,
 
       generateInvoiceFromSubscription: async (data, taxRateBps, exchangeRate) => {
         set({ isLoading: true, error: null });
@@ -183,7 +193,12 @@ export const useInvoiceStore = create<InvoiceState>()(
             data.subscription,
             state.nextSequence,
             data.period,
-            { ...state.config, defaultCurrency: currency, defaultRegion: region },
+            {
+              ...state.config,
+              defaultCurrency: currency,
+              defaultRegion: region,
+              branding: state.branding,
+            },
             taxRateBps ?? state.config.defaultTaxRateBps,
             exchangeRate ?? state.config.exchangeRateScale,
             region,
@@ -283,6 +298,32 @@ export const useInvoiceStore = create<InvoiceState>()(
         }));
       },
 
+      setBranding: (branding) => {
+        set((state) => {
+          const nextBranding = normalizeInvoiceBranding({
+            ...state.branding,
+            ...branding,
+          });
+          return {
+            branding: nextBranding,
+            config: {
+              ...state.config,
+              branding: nextBranding,
+            },
+          };
+        });
+      },
+
+      resetBranding: () => {
+        set((state) => ({
+          branding: DEFAULT_INVOICE_BRANDING,
+          config: {
+            ...state.config,
+            branding: DEFAULT_INVOICE_BRANDING,
+          },
+        }));
+      },
+
       calculateTotals: (id) => {
         const invoice = get().invoices.find((entry) => entry.id === id);
         if (!invoice) return null;
@@ -320,10 +361,16 @@ export const useInvoiceStore = create<InvoiceState>()(
           return;
         }
 
+        const persistedConfig = state?.config;
+        const persistedBranding = state?.branding ?? persistedConfig?.branding;
+
         useInvoiceStore.setState({
           invoices: state?.invoices ?? [],
           nextSequence: state?.nextSequence ?? 1,
-          config: state?.config ?? DEFAULT_INVOICE_CONFIG,
+          config: persistedConfig
+            ? { ...persistedConfig, branding: normalizeInvoiceBranding(persistedBranding) }
+            : { ...DEFAULT_INVOICE_CONFIG, branding: DEFAULT_INVOICE_BRANDING },
+          branding: normalizeInvoiceBranding(persistedBranding),
           isLoading: false,
           error: null,
         });

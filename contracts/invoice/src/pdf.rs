@@ -31,6 +31,61 @@ fn collect_lines(invoice: &Invoice) -> StdString {
     body.push_str(&format!("Currency: {}\n", invoice.currency.to_string()));
     body.push_str(&format!("Region: {}\n", invoice.region.to_string()));
     body.push_str(&format!("Due date: {}\n", invoice.due_date));
+    body.push_str("\nBranding:\n");
+    body.push_str(&format!(
+        "Primary color: {}\n",
+        invoice.branding.primary_color.to_string()
+    ));
+    body.push_str(&format!(
+        "Accent color: {}\n",
+        invoice.branding.accent_color.to_string()
+    ));
+    body.push_str(&format!(
+        "Logo URI: {}\n",
+        invoice.branding.logo_uri.to_string()
+    ));
+    body.push_str(&format!(
+        "Locale: {}\n",
+        invoice.branding.locale.to_string()
+    ));
+    body.push_str(&format!(
+        "Date format: {}\n",
+        invoice.branding.date_format.to_string()
+    ));
+    body.push_str(&format!(
+        "Currency position: {}\n",
+        invoice.branding.currency_position.to_string()
+    ));
+    body.push_str(&format!(
+        "PO number: {}\n",
+        invoice.branding.po_number.to_string()
+    ));
+    body.push_str(&format!("VAT ID: {}\n", invoice.branding.vat_id.to_string()));
+    body.push_str(&format!(
+        "Cost center: {}\n",
+        invoice.branding.cost_center.to_string()
+    ));
+    body.push_str(&format!(
+        "Department: {}\n",
+        invoice.branding.department.to_string()
+    ));
+    body.push_str(&format!(
+        "Payment terms: {}\n",
+        invoice.branding.payment_terms.to_string()
+    ));
+    body.push_str(&format!(
+        "Late fee policy: {}\n",
+        invoice.branding.late_fee_policy.to_string()
+    ));
+    body.push_str(&format!("Footer note: {}\n", invoice.branding.footer_note.to_string()));
+    body.push_str("\nCustom fields:\n");
+    for field in invoice.branding.custom_fields.iter() {
+        body.push_str(&format!(
+            "  - {}: {}\n",
+            field.label.to_string(),
+            field.value.to_string()
+        ));
+    }
     body.push_str("\nLine items:\n");
     for item in invoice.line_items.iter() {
         body.push_str("  - ");
@@ -41,6 +96,11 @@ fn collect_lines(invoice: &Invoice) -> StdString {
     body.push_str(&format!("Subtotal: {}\n", invoice.subtotal));
     body.push_str(&format!("Tax: {}\n", invoice.tax));
     body.push_str(&format!("Total: {}\n", invoice.total));
+    if invoice.branding.legal_text.len() > 240 {
+        body.push_str("\n--- Page 2 ---\n");
+    }
+    body.push_str(&invoice.branding.legal_text.to_string());
+    body.push('\n');
     body
 }
 
