@@ -28,7 +28,12 @@
     "acbu-backend/",
     "src/animations/",
     "stellarlend/",
-    "stellarlend-pr282/"
+    "stellarlend-pr282/",
+    "Astera/",
+    "developer-portal/",
+    "sandbox/",
+    "sdks/",
+    "chaos/"
   ],
   "settings": {
     "import/resolver": {

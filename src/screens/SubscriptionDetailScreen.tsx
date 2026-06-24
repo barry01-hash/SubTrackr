@@ -22,7 +22,8 @@ import { RootStackParamList } from '../navigation/types';
 // Components
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
-import { ScreenTransition, SharedElement } from '../components/common/SharedElement';
+import { SharedElement } from '../components/common/SharedElement';
+import { ScreenTransition } from '../components/common/ScreenTransitions';
 
 type SubscriptionDetailRouteProp = RouteProp<RootStackParamList, 'SubscriptionDetail'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

@@ -49,7 +49,6 @@ export const AnimatedSubscriptionCard: React.FC<AnimatedSubscriptionCardProps> =
   const fallbackSharedElementAnim = useAnimatedValue(1);
 
   // Shared element transition
-  const fallbackSharedElementAnim = useAnimatedValue(1);
   const sharedElementAnim = sharedElementId
     ? SharedElementTransition.register(sharedElementId, 1)
     : fallbackSharedElementAnim;

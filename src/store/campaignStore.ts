@@ -1,14 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  Campaign,
-  CampaignType,
-  CampaignStatus,
-  CampaignAnalytics,
-  DeliveryChannel,
-  AutomationTrigger,
-} from '../types/campaign';
+import { Campaign, CampaignStatus, CampaignAnalytics } from '../types/campaign';
 
 const STORAGE_KEY = 'subtrackr-campaign';
 const STORE_VERSION = 1;

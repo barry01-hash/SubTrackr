@@ -94,6 +94,11 @@ class TestDataGenerator {
         includeInactive: false,
         includeCrypto: false,
       },
+      [SandboxEnvironment.PRODUCTION]: {
+        subscriptions: 30,
+        includeInactive: true,
+        includeCrypto: true,
+      },
     };
 
     return this.generateSubscriptions(configs[environment]);

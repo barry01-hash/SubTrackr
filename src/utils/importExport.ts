@@ -3,8 +3,34 @@
  * Supports CSV import with column mapping and JSON export
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Subscription, SubscriptionCategory, BillingCycle } from '../types/subscription';
+
+type AsyncStorageLike = {
+  getItem: (key: string) => Promise<string | null>;
+  setItem: (key: string, value: string) => Promise<void>;
+  removeItem: (key: string) => Promise<void>;
+};
+
+const memoryStorage: AsyncStorageLike = {
+  getItem: async () => null,
+  setItem: async () => undefined,
+  removeItem: async () => undefined,
+};
+
+let storage: AsyncStorageLike = memoryStorage;
+
+try {
+  // Jest and non-native environments can fall back to the in-memory shim.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const nativeStorage = require('@react-native-async-storage/async-storage') as {
+    default?: AsyncStorageLike;
+  };
+  if (nativeStorage?.default) {
+    storage = nativeStorage.default;
+  }
+} catch {
+  storage = memoryStorage;
+}
 
 // ============================================
 // Types
@@ -241,7 +267,7 @@ export function parseCSV(csvContent: string): SubscriptionInput[] {
       const columnIndex = headerMap.get(mapping.csvColumn.toLowerCase());
       if (columnIndex !== undefined && values[columnIndex]) {
         const rawValue = values[columnIndex];
-        const value = mapping.transform ? String(mapping.transform(rawValue)) : rawValue;
+        const value = mapping.transform ? mapping.transform(rawValue) : rawValue;
 
         (subscription as Record<string, unknown>)[mapping.fieldName] = value;
       }
@@ -556,6 +582,7 @@ export function processImport(
       const existingByIdMatch = input.id ? existingById.get(input.id) : null;
       const isUpdate = (existingByNameMatch || existingByIdMatch) && data.mode === 'upsert';
       const isReplace = data.mode === 'replace';
+      const isDuplicate = Boolean(existingByNameMatch || existingByIdMatch);
 
       if (isUpdate || isReplace) {
         // Update existing
@@ -580,6 +607,13 @@ export function processImport(
           processedSubscriptions.push(merged);
           updatedCount++;
         }
+      } else if (isDuplicate) {
+        errors.push({
+          row: rowNum,
+          field: 'name',
+          message: `Subscription "${input.name}" already exists`,
+          value: input.name,
+        });
       } else {
         // Create new
         const newSubscription: Subscription = {
@@ -630,7 +664,7 @@ export function processImport(
  */
 export async function getImportHistory(): Promise<ImportHistoryEntry[]> {
   try {
-    const historyJson = await AsyncStorage.getItem(HISTORY_KEY);
+    const historyJson = await storage.getItem(HISTORY_KEY);
     if (historyJson) {
       return JSON.parse(historyJson);
     }
@@ -652,7 +686,7 @@ export async function saveImportHistory(entry: ImportHistoryEntry): Promise<void
     // Keep only last N entries
     const trimmedHistory = history.slice(0, MAX_HISTORY_ENTRIES);
 
-    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(trimmedHistory));
+    await storage.setItem(HISTORY_KEY, JSON.stringify(trimmedHistory));
   } catch (error) {
     console.error('Failed to save import history:', error);
   }
@@ -687,7 +721,7 @@ export async function recordImport(
  */
 export async function clearImportHistory(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(HISTORY_KEY);
+    await storage.removeItem(HISTORY_KEY);
   } catch (error) {
     console.error('Failed to clear import history:', error);
   }

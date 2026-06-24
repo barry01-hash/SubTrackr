@@ -9,13 +9,13 @@ export interface SharedElementProps {
   transitionType?: 'fade' | 'scale' | 'slide';
 }
 
-interface ScreenTransitionProps {
+interface SharedElementScreenTransitionProps {
   children: React.ReactNode;
   type?: 'slide' | 'fade' | 'none';
   duration?: number;
 }
 
-export const ScreenTransition: React.FC<ScreenTransitionProps> = ({
+export const SharedElementScreenTransition: React.FC<SharedElementScreenTransitionProps> = ({
   children,
   type = 'slide',
   duration = 400,

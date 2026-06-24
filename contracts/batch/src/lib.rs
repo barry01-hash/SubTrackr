@@ -22,7 +22,9 @@ pub use batch::{
 };
 
 use batch::{SubRecord, SubStatus};
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Vec};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Vec,
+};
 use subtrackr_types::SubscriptionId;
 
 /// Largest batch accepted by [`validate_batch_operation`].
@@ -173,7 +175,9 @@ impl SubTrackrBatch {
             let mut w = 0u32;
             while w < pending_writes.len() {
                 let (sub_id, record) = pending_writes.get(w).unwrap();
-                env.storage().persistent().set(&DataKey::Sub(sub_id), &record);
+                env.storage()
+                    .persistent()
+                    .set(&DataKey::Sub(sub_id), &record);
                 w += 1;
             }
         }
@@ -187,7 +191,9 @@ impl SubTrackrBatch {
         } else {
             BatchState::PartiallyCompleted
         };
-        env.storage().persistent().set(&DataKey::Batch(batch_id), &stored);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Batch(batch_id), &stored);
 
         let result = BatchResult {
             batch_id,
@@ -199,7 +205,9 @@ impl SubTrackrBatch {
             rolled_back,
             gas_estimate: estimate_batch_gas(&op),
         };
-        env.storage().persistent().set(&DataKey::Result(batch_id), &result);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Result(batch_id), &result);
 
         env.events().publish(
             (symbol_short!("batch_exe"), batch_id),
@@ -292,7 +300,9 @@ impl SubTrackrBatch {
                 updated.charged = current.charged.saturating_add(amount);
                 Ok(updated)
             }
-            OperationType::Pause | OperationType::Resume | OperationType::Cancel
+            OperationType::Pause
+            | OperationType::Resume
+            | OperationType::Cancel
             | OperationType::Update => {
                 if !current.exists {
                     return Err(2);

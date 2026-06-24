@@ -9,30 +9,21 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  FlatList,
 } from 'react-native';
 import { colors, spacing, typography, borderRadius } from '../utils/constants';
 import { useAffiliateStore } from '../store/affiliateStore';
 import { useWalletStore } from '../store/walletStore';
 import { Card } from '../components/common/Card';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { AffiliateStatus, AffiliateProgram, Commission } from '../types/affiliate';
+import { AffiliateStatus } from '../types/affiliate';
 
 const AffiliateDashboardScreen: React.FC = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     affiliates,
     programs,
     commissions,
     metrics,
     isLoading,
-    error,
     registerAffiliate,
-    trackReferral,
-    calculateCommission,
-    payoutCommission,
     updateAffiliateStatus,
     getMetrics,
   } = useAffiliateStore();
@@ -59,22 +50,6 @@ const AffiliateDashboardScreen: React.FC = () => {
     setProgramModalVisible(false);
     Alert.alert('Success', 'You are now an affiliate!');
   }, [address, selectedProgram, registerAffiliate]);
-
-  const handlePayout = useCallback(
-    async (affiliateId: string) => {
-      const affiliate = affiliates.find((a) => a.id === affiliateId);
-      if (!affiliate || affiliate.pendingPayout < affiliate.paymentThreshold) {
-        Alert.alert(
-          'Minimum Threshold',
-          `You need at least $${affiliate?.paymentThreshold} to request a payout`
-        );
-        return;
-      }
-      await payoutCommission(affiliateId);
-      Alert.alert('Success', 'Payout requested!');
-    },
-    [affiliates, payoutCommission]
-  );
 
   const handleToggleStatus = useCallback(
     async (affiliateId: string, newStatus: AffiliateStatus) => {
@@ -125,9 +100,7 @@ const AffiliateDashboardScreen: React.FC = () => {
                 {affiliate.referrerAddress.slice(-4)}
               </Text>
               <View style={styles.affiliateStats}>
-                <Text style={styles.affiliateStat}>
-                  {affiliate.totalReferrals} referrals
-                </Text>
+                <Text style={styles.affiliateStat}>{affiliate.totalReferrals} referrals</Text>
                 <Text style={styles.affiliateStat}>
                   ${affiliate.totalEarnings.toFixed(2)} earned
                 </Text>
@@ -142,8 +115,8 @@ const AffiliateDashboardScreen: React.FC = () => {
                       affiliate.status === AffiliateStatus.ACTIVE
                         ? colors.success
                         : affiliate.status === AffiliateStatus.PAUSED
-                        ? colors.warning
-                        : colors.danger,
+                          ? colors.warning
+                          : colors.danger,
                   },
                 ]}>
                 <Text style={styles.statusBadgeText}>{affiliate.status}</Text>
@@ -151,17 +124,13 @@ const AffiliateDashboardScreen: React.FC = () => {
               {affiliate.status === AffiliateStatus.ACTIVE ? (
                 <TouchableOpacity
                   style={styles.pauseButton}
-                  onPress={() =>
-                    handleToggleStatus(affiliate.id, AffiliateStatus.PAUSED)
-                  }>
+                  onPress={() => handleToggleStatus(affiliate.id, AffiliateStatus.PAUSED)}>
                   <Text style={styles.pauseButtonText}>Pause</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
                   style={styles.resumeButton}
-                  onPress={() =>
-                    handleToggleStatus(affiliate.id, AffiliateStatus.ACTIVE)
-                  }>
+                  onPress={() => handleToggleStatus(affiliate.id, AffiliateStatus.ACTIVE)}>
                   <Text style={styles.resumeButtonText}>Resume</Text>
                 </TouchableOpacity>
               )}
@@ -192,8 +161,8 @@ const AffiliateDashboardScreen: React.FC = () => {
               {program.commissionConfig.type === 'percentage'
                 ? `${program.commissionConfig.rate}%`
                 : program.commissionConfig.type === 'flat'
-                ? `$${program.commissionConfig.rate}`
-                : 'Tiered'}
+                  ? `$${program.commissionConfig.rate}`
+                  : 'Tiered'}
             </Text>
             <Text style={styles.rateLabel}>commission</Text>
           </View>
@@ -228,8 +197,8 @@ const AffiliateDashboardScreen: React.FC = () => {
                       commission.status === 'paid'
                         ? colors.success
                         : commission.status === 'approved'
-                        ? colors.warning
-                        : colors.textSecondary,
+                          ? colors.warning
+                          : colors.textSecondary,
                   },
                 ]}>
                 <Text style={styles.commissionStatusText}>{commission.status}</Text>
@@ -257,9 +226,7 @@ const AffiliateDashboardScreen: React.FC = () => {
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
           <Text style={styles.title}>Affiliate Dashboard</Text>
-          <Text style={styles.subtitle}>
-            Track referrals and earn commissions
-          </Text>
+          <Text style={styles.subtitle}>Track referrals and earn commissions</Text>
         </View>
 
         {renderMetricsCard()}
@@ -284,9 +251,7 @@ const AffiliateDashboardScreen: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Program</Text>
-            <Text style={styles.modalSubtitle}>
-              Choose an affiliate program to join
-            </Text>
+            <Text style={styles.modalSubtitle}>Choose an affiliate program to join</Text>
 
             {programs.map((program) => (
               <TouchableOpacity
@@ -298,18 +263,14 @@ const AffiliateDashboardScreen: React.FC = () => {
                 onPress={() => setSelectedProgram(program.id)}>
                 <View style={styles.programOptionInfo}>
                   <Text style={styles.programOptionName}>{program.name}</Text>
-                  <Text style={styles.programOptionDesc}>
-                    {program.description}
-                  </Text>
+                  <Text style={styles.programOptionDesc}>{program.description}</Text>
                 </View>
                 <View
                   style={[
                     styles.radioCircle,
                     selectedProgram === program.id && styles.radioCircleSelected,
                   ]}>
-                  {selectedProgram === program.id && (
-                    <View style={styles.radioInner} />
-                  )}
+                  {selectedProgram === program.id && <View style={styles.radioInner} />}
                 </View>
               </TouchableOpacity>
             ))}
@@ -320,9 +281,7 @@ const AffiliateDashboardScreen: React.FC = () => {
                 onPress={() => setProgramModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={handleRegister}>
+              <TouchableOpacity style={styles.confirmButton} onPress={handleRegister}>
                 <Text style={styles.confirmButtonText}>Join Program</Text>
               </TouchableOpacity>
             </View>

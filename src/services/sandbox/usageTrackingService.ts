@@ -9,7 +9,7 @@ const generateId = (): string => {
   return `${timestamp}-${random}`;
 };
 
-const MOCK_ENDPOINTS = [
+const MOCK_ENDPOINTS: Array<{ path: string; method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' }> = [
   { path: '/api/v1/subscriptions', method: 'GET' },
   { path: '/api/v1/subscriptions', method: 'POST' },
   { path: '/api/v1/subscriptions/:id', method: 'GET' },
@@ -64,7 +64,7 @@ class UsageTrackingService {
     developerId: string,
     apiKeyId: string,
     endpoint: string,
-    method: string,
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     statusCode: number,
     responseTime: number,
     _environment: SandboxEnvironment = SandboxEnvironment.DEVELOPMENT

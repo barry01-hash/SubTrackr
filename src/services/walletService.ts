@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { Framework, SFError } from '@superfluid-finance/sdk-core';
+import { Framework } from '@superfluid-finance/sdk-core';
 
 import { ERC20__factory, getContractAddress } from '../contracts';
 import { getEvmRpcUrl } from '../config/evm';
@@ -29,13 +29,8 @@ export class WalletError extends Error {
   readonly userMessage: string;
   readonly recovery?: string;
 
-  constructor(
-    code: WalletErrorCode,
-    userMessage: string,
-    recovery?: string,
-    cause?: unknown
-  ) {
-    super(userMessage);
+  constructor(code: WalletErrorCode, userMessage: string, recovery?: string, cause?: unknown) {
+    super(cause instanceof Error && cause.message ? cause.message : userMessage);
     this.name = 'WalletError';
     this.code = code;
     this.userMessage = userMessage;

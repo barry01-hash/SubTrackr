@@ -37,3 +37,8 @@ package.json.backup
 # GitHub API response dumps (UTF-16 encoded)
 issue*.json
 issues_summary.json
+Astera/
+developer-portal/
+sandbox/
+sdks/
+chaos/
