@@ -4,12 +4,15 @@ import {
   ApiKey,
   ApiKeyPermission,
   ApiKeyStatus,
-  UsageStats,
-  UsageRecord,
   OnboardingStep,
   DocumentationSection,
   IntegrationGuide,
 } from '../types/developerPortal';
+import {
+  ApiKey as SandboxApiKey,
+  UsageMetric as SandboxUsageMetric,
+  UsageStats as SandboxUsageStats,
+} from '../types/sandbox';
 import { developerPortalService } from '../services/sandbox/developerPortalService';
 import { apiKeyService } from '../services/sandbox/apiKeyService';
 import { usageTrackingService } from '../services/sandbox/usageTrackingService';
@@ -18,8 +21,8 @@ import { errorHandler, AppError } from '../services/errorHandler';
 interface DeveloperPortalState {
   developer: DeveloperProfile | null;
   apiKeys: ApiKey[];
-  usageStats: UsageStats | null;
-  recentUsage: UsageRecord[];
+  usageStats: SandboxUsageStats | null;
+  recentUsage: SandboxUsageMetric[];
   onboardingSteps: OnboardingStep[];
   documentation: DocumentationSection[];
   integrationGuides: IntegrationGuide[];
@@ -61,6 +64,24 @@ interface DeveloperPortalState {
   clearError: () => void;
 }
 
+function toDeveloperPortalApiKey(apiKey: SandboxApiKey): ApiKey {
+  return {
+    id: apiKey.id,
+    developerId: apiKey.developerId ?? '',
+    name: apiKey.name,
+    key: apiKey.key,
+    prefix: apiKey.key.slice(0, 10),
+    permissions: (apiKey.permissions ?? ['read', 'write']) as ApiKeyPermission[],
+    status: apiKey.status as ApiKeyStatus,
+    rateLimit: apiKey.rateLimit?.requestsPerMinute ?? 100,
+    dailyLimit: apiKey.rateLimit?.requestsPerDay ?? 10000,
+    createdAt: apiKey.createdAt,
+    expiresAt: apiKey.expiresAt ?? undefined,
+    lastUsedAt: apiKey.lastUsedAt ?? undefined,
+    metadata: {},
+  };
+}
+
 export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get) => ({
   developer: null,
   apiKeys: [],
@@ -100,20 +121,15 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
   fetchDeveloper: async (developerId: string) => {
     set({ isLoading: true, error: null });
     try {
-      await Promise.all([
-        developerPortalService.loadDevelopers(),
-        apiKeyService.loadApiKeys(),
-      ]);
+      await Promise.all([developerPortalService.loadDevelopers(), apiKeyService.loadApiKeys()]);
 
       const developer = await developerPortalService.getDeveloper(developerId);
       if (!developer) {
         throw new Error('Developer not found');
       }
 
-      const [apiKeys, steps] = await Promise.all([
-        apiKeyService.getApiKeysByDeveloper(developerId),
-        developerPortalService.getOnboardingSteps(developerId),
-      ]);
+      const apiKeys = apiKeyService.getApiKeysByDeveloper(developerId).map(toDeveloperPortalApiKey);
+      const steps = await developerPortalService.getOnboardingSteps(developerId);
 
       set({
         developer,
@@ -137,10 +153,7 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
 
     set({ isLoading: true, error: null });
     try {
-      const updated = await developerPortalService.updateDeveloper(
-        developer.id,
-        updates
-      );
+      const updated = await developerPortalService.updateDeveloper(developer.id, updates);
       set({ developer: updated, isLoading: false });
     } catch (error) {
       set({
@@ -156,7 +169,9 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
     set({ isLoading: true, error: null });
     try {
       await apiKeyService.loadApiKeys();
-      const apiKeys = await apiKeyService.getApiKeysByDeveloper(developerId);
+      const apiKeys = (await apiKeyService.getApiKeysByDeveloper(developerId)).map(
+        toDeveloperPortalApiKey
+      );
       set({ apiKeys, isLoading: false });
     } catch (error) {
       set({
@@ -178,20 +193,18 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
         undefined,
         permissionStrings
       );
+      const normalized = toDeveloperPortalApiKey(apiKey);
       set((state) => ({
-        apiKeys: [...state.apiKeys, apiKey],
+        apiKeys: [...state.apiKeys, normalized],
         isLoading: false,
       }));
 
-      await developerPortalService.completeOnboardingStep(
-        developerId,
-        'generate-api-key'
-      );
+      await developerPortalService.completeOnboardingStep(developerId, 'generate-api-key');
 
       const steps = await developerPortalService.getOnboardingSteps(developerId);
       set({ onboardingSteps: steps });
 
-      return apiKey;
+      return normalized;
     } catch (error) {
       const appError = errorHandler.handleError(error as Error, {
         action: 'createApiKey',
@@ -227,7 +240,9 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
       const rotated = await apiKeyService.rotateApiKey(keyId);
       if (rotated) {
         set((state) => ({
-          apiKeys: state.apiKeys.map((k) => (k.id === keyId ? rotated : k)),
+          apiKeys: state.apiKeys.map((k) =>
+            k.id === keyId ? toDeveloperPortalApiKey(rotated) : k
+          ),
           isLoading: false,
         }));
       }
@@ -278,10 +293,10 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
   fetchRecentUsage: async (developerId, limit) => {
     set({ isLoading: true, error: null });
     try {
-      const recentUsage = await usageTrackingService.getRecentMetrics(
+      const recentUsage = (await usageTrackingService.getRecentMetrics(
         developerId,
         limit
-      );
+      )) as SandboxUsageMetric[];
       set({ recentUsage, isLoading: false });
     } catch (error) {
       set({
@@ -304,10 +319,7 @@ export const useDeveloperPortalStore = create<DeveloperPortalState>()((set, get)
 
   completeOnboardingStep: async (developerId, stepId) => {
     try {
-      const steps = await developerPortalService.completeOnboardingStep(
-        developerId,
-        stepId
-      );
+      const steps = await developerPortalService.completeOnboardingStep(developerId, stepId);
       if (steps) {
         set({ onboardingSteps: steps });
       }

@@ -150,8 +150,16 @@ export class PriceService {
       );
     }
 
-    this.checkDeviation(key, token, quote, config.deviationThresholdBps, selected);
-    this.clearFaults(key);
+    const faultRecorded = this.checkDeviation(
+      key,
+      token,
+      quote,
+      config.deviationThresholdBps,
+      selected
+    );
+    if (!faultRecorded) {
+      this.clearFaults(key);
+    }
     return selected;
   }
 
@@ -213,18 +221,27 @@ export class PriceService {
     quote: string,
     thresholdBps: number,
     current: Price,
-  ): void {
+  ): boolean {
     const previous = this.lastSeen.get(key);
     if (previous) {
       const dev = deviationBps(previous.value, current.value);
       if (dev > thresholdBps) {
         for (const listener of this.alertListeners) {
-          listener({ token, quote, previous: previous.value, current: current.value, deviationBps: dev });
+          listener({
+            token,
+            quote,
+            previous: previous.value,
+            current: current.value,
+            deviationBps: dev,
+          });
         }
         this.recordFault(key);
+        this.lastSeen.set(key, current);
+        return true;
       }
     }
     this.lastSeen.set(key, current);
+    return false;
   }
 
   private recordFault(key: string): void {

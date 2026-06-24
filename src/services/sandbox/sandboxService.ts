@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SandboxConfig,
   SandboxEnvironment,
+  SandboxStatus,
   TestSubscription,
   RateLimitConfig,
 } from '../../types/sandbox';
@@ -82,6 +83,7 @@ const DEFAULT_SANDBOX_CONFIG: SandboxConfig = {
   name: 'Development Sandbox',
   description: 'Isolated sandbox environment for testing integrations',
   isActive: true,
+  status: SandboxStatus.ACTIVE,
   dataIsolation: true,
   rateLimit: ENV_RATE_LIMITS[SandboxEnvironment.DEVELOPMENT],
   dataResetInterval: 'weekly',

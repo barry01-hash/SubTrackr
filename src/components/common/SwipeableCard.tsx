@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   actionBackground: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

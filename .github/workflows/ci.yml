@@ -8,7 +8,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  RUST_VERSION: '1.85'
+  RUST_VERSION: '1.88.0'
 
 jobs:
   commitlint:
@@ -340,10 +340,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
       - name: Run k6 Load Test
-        uses: grafana/k6-action@v0.5.1
+        uses: grafana/run-k6-action@v1
         with:
-          filename: load-tests/run.js
+          path: load-tests/run.js
           flags: --env SCENARIO=subscription
 
   # ─────────────────────────────────────────────────────────

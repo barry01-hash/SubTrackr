@@ -7,6 +7,7 @@ export const colors = {
   success: '#10b981', // Emerald
   warning: '#f59e0b', // Amber
   error: '#ef4444', // Red
+  danger: '#ef4444', // Red alias for semantic variants
   background: '#0f172a', // Dark slate
   surface: '#1e293b', // Slate 800
   surfaceVariant: '#334155', // Slate 600
@@ -80,6 +81,15 @@ export const typography = {
     fontWeight: 'normal' as const,
     lineHeight: 16,
   },
+  fontSizeXs: 12,
+  fontSizeSm: 14,
+  fontSizeMd: 16,
+  fontSizeLg: 20,
+  fontSizeXl: 24,
+  fontWeightRegular: 'normal' as const,
+  fontWeightMedium: '500' as const,
+  fontWeightBold: 'bold' as const,
+  fontFamilyMono: 'monospace' as const,
 };
 
 export const shadows = {
