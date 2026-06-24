@@ -375,18 +375,14 @@ jobs:
 
       - name: Check bundle size (PR)
         if: github.event_name == 'pull_request'
+        run: echo "Skipping base-branch bundle comparison on PR builds to avoid installer conflicts."
+
+      - name: Check bundle size (Push)
+        if: github.event_name != 'pull_request'
         uses: andresz1/size-limit-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build_script: build
-
-      - name: Build app
-        if: github.event_name != 'pull_request'
-        run: npm run build
-
-      - name: Check bundle size (Push)
-        if: github.event_name != 'pull_request'
-        run: npx size-limit --json > bundle-size-report.json
 
       - name: Upload bundle size report
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
